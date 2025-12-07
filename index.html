@@ -1,468 +1,482 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, RotateCcw, Star, CheckCircle, X, Trophy, Target, TrendingUp, Shuffle, Menu } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Soccer Spanish">
+    <title>Soccer Spanish Flashcards ⚽</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        .perspective { perspective: 1000px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-const SoccerSpanishFlashcards = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState('positions');
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [masteredCards, setMasteredCards] = useState(new Set());
-  const [difficultCards, setDifficultCards] = useState(new Set());
-  const [studyMode, setStudyMode] = useState('all'); // all, difficult, unmastered
-  const [showStats, setShowStats] = useState(false);
-  const [sessionStats, setSessionStats] = useState({
-    cardsStudied: 0,
-    cardsMarkedEasy: 0,
-    cardsMarkedDifficult: 0,
-    categoriesCompleted: new Set()
-  });
+    <script type="text/babel">
+        const { useState } = React;
+        
+        // Lucide Icons as inline SVG components
+        const ArrowRight = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>;
+        const ArrowLeft = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>;
+        const RotateCcw = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>;
+        const Star = ({className}) => <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+        const CheckCircle = ({className}) => <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+        const Trophy = ({className}) => <svg className={className} width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>;
+        const TrendingUp = ({className}) => <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>;
+        const Shuffle = ({className}) => <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>;
+        const Menu = ({className}) => <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
 
-  const flashcardData = {
-    positions: {
-      name: 'Positions',
-      icon: '👥',
-      cards: [
-        { spanish: 'El portero', english: 'Goalkeeper', example: 'El portero atrapó el balón' },
-        { spanish: 'El defensa', english: 'Defender', example: 'El defensa marcó al delantero' },
-        { spanish: 'El lateral', english: 'Fullback', example: 'El lateral derecho corrió por la banda' },
-        { spanish: 'El centrocampista', english: 'Midfielder', example: 'El centrocampista pasó el balón' },
-        { spanish: 'El delantero', english: 'Forward/Striker', example: 'El delantero marcó un gol' },
-        { spanish: 'El extremo', english: 'Winger', example: 'El extremo hizo un centro perfecto' },
-        { spanish: 'El mediocentro', english: 'Central midfielder', example: 'El mediocentro recuperó el balón' },
-        { spanish: 'El capitán', english: 'Captain', example: 'El capitán motivó al equipo' }
-      ]
-    },
-    actions: {
-      name: 'Actions & Verbs',
-      icon: '⚡',
-      cards: [
-        { spanish: 'Pasar', english: 'To pass', example: '¡Pasa el balón!' },
-        { spanish: 'Tirar/Chutar', english: 'To shoot', example: '¡Tira a la portería!' },
-        { spanish: 'Correr', english: 'To run', example: '¡Corre más rápido!' },
-        { spanish: 'Marcar', english: 'To mark/score', example: 'Necesito marcar a ese jugador' },
-        { spanish: 'Defender', english: 'To defend', example: '¡Defiende la portería!' },
-        { spanish: 'Driblar/Regatear', english: 'To dribble', example: 'Regatea al defensa' },
-        { spanish: 'Centrar', english: 'To cross', example: 'Centra el balón al área' },
-        { spanish: 'Rematar', english: 'To finish/strike', example: 'Remata con fuerza' },
-        { spanish: 'Interceptar', english: 'To intercept', example: 'Intercepta el pase' },
-        { spanish: 'Despejar', english: 'To clear', example: 'Despeja el balón' }
-      ]
-    },
-    training: {
-      name: 'Training Terms',
-      icon: '🏃',
-      cards: [
-        { spanish: 'El entrenamiento', english: 'Training', example: 'El entrenamiento empieza a las 9' },
-        { spanish: 'El ejercicio', english: 'Drill/Exercise', example: 'Vamos a hacer un ejercicio' },
-        { spanish: 'El calentamiento', english: 'Warm-up', example: 'Empezamos con el calentamiento' },
-        { spanish: 'El estiramiento', english: 'Stretching', example: 'Los estiramientos son importantes' },
-        { spanish: 'La táctica', english: 'Tactics', example: 'Vamos a practicar la táctica' },
-        { spanish: 'La estrategia', english: 'Strategy', example: 'Nuestra estrategia es presionar alto' },
-        { spanish: 'El partido de práctica', english: 'Practice match', example: 'Jugamos un partido de práctica' },
-        { spanish: 'La formación', english: 'Formation', example: 'Jugamos en formación 4-3-3' }
-      ]
-    },
-    field: {
-      name: 'Field & Equipment',
-      icon: '🏟️',
-      cards: [
-        { spanish: 'El campo', english: 'Field/Pitch', example: 'El campo está mojado' },
-        { spanish: 'La portería', english: 'Goal', example: 'La portería mide 7 metros' },
-        { spanish: 'El balón', english: 'Ball', example: '¿Dónde está el balón?' },
-        { spanish: 'El área', english: 'Penalty area', example: 'No toques el balón en el área' },
-        { spanish: 'La línea', english: 'Line', example: 'El balón cruzó la línea' },
-        { spanish: 'El banquillo', english: 'Bench', example: 'Los suplentes están en el banquillo' },
-        { spanish: 'La red', english: 'Net', example: 'El balón entró en la red' },
-        { spanish: 'El poste', english: 'Goal post', example: 'El balón pegó en el poste' },
-        { spanish: 'La banda', english: 'Sideline/Wing', example: 'Corre por la banda' }
-      ]
-    },
-    commands: {
-      name: 'Coach Commands',
-      icon: '📢',
-      cards: [
-        { spanish: '¡Vamos!', english: "Let's go!", example: '¡Vamos equipo!' },
-        { spanish: '¡Más rápido!', english: 'Faster!', example: '¡Corre más rápido!' },
-        { spanish: '¡Bien hecho!', english: 'Well done!', example: '¡Bien hecho, buen pase!' },
-        { spanish: '¡Otra vez!', english: 'Again!', example: '¡Otra vez, repite el ejercicio!' },
-        { spanish: '¡Concéntrate!', english: 'Focus!/Concentrate!', example: '¡Concéntrate en el balón!' },
-        { spanish: '¡Presiona!', english: 'Press!', example: '¡Presiona al jugador!' },
-        { spanish: '¡Retrocede!', english: 'Fall back!', example: '¡Retrocede a defender!' },
-        { spanish: '¡Sube!', english: 'Push up!', example: '¡Sube al ataque!' },
-        { spanish: '¡Juntos!', english: 'Together!', example: '¡Presionamos juntos!' },
-        { spanish: '¡Marca!', english: 'Mark!', example: '¡Marca a ese jugador!' }
-      ]
-    },
-    phrases: {
-      name: 'Common Phrases',
-      icon: '💬',
-      cards: [
-        { spanish: '¿Estás bien?', english: 'Are you okay?', example: 'Después de la caída: ¿Estás bien?' },
-        { spanish: 'Estoy cansado', english: "I'm tired", example: 'Necesito agua, estoy cansado' },
-        { spanish: 'No entiendo', english: "I don't understand", example: 'Perdón, no entiendo' },
-        { spanish: 'Una vez más, por favor', english: 'One more time, please', example: 'Repítelo una vez más, por favor' },
-        { spanish: '¿Puedo tomar agua?', english: 'Can I get water?', example: 'Tengo sed, ¿puedo tomar agua?' },
-        { spanish: 'Me duele...', english: 'It hurts... / I hurt my...', example: 'Me duele la rodilla' },
-        { spanish: 'Buen trabajo', english: 'Good job', example: '¡Buen trabajo en el entrenamiento!' },
-        { spanish: 'Lo siento', english: "I'm sorry", example: 'Lo siento por el error' },
-        { spanish: 'Gracias por tu ayuda', english: 'Thanks for your help', example: 'Gracias por tu ayuda con el ejercicio' }
-      ]
-    }
-  };
+        const SoccerSpanishFlashcards = () => {
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+            const [currentCategory, setCurrentCategory] = useState('positions');
+            const [currentCardIndex, setCurrentCardIndex] = useState(0);
+            const [isFlipped, setIsFlipped] = useState(false);
+            const [masteredCards, setMasteredCards] = useState(new Set());
+            const [difficultCards, setDifficultCards] = useState(new Set());
+            const [studyMode, setStudyMode] = useState('all');
+            const [showStats, setShowStats] = useState(false);
+            const [sessionStats, setSessionStats] = useState({
+                cardsStudied: 0,
+                cardsMarkedEasy: 0,
+                cardsMarkedDifficult: 0,
+            });
 
-  const allCards = Object.values(flashcardData).flatMap(cat => 
-    cat.cards.map(card => ({ ...card, category: cat.name }))
-  );
+            const flashcardData = {
+                positions: {
+                    name: 'Positions',
+                    icon: '👥',
+                    cards: [
+                        { spanish: 'El portero', english: 'Goalkeeper', example: 'El portero atrapó el balón' },
+                        { spanish: 'El defensa', english: 'Defender', example: 'El defensa marcó al delantero' },
+                        { spanish: 'El lateral', english: 'Fullback', example: 'El lateral derecho corrió por la banda' },
+                        { spanish: 'El centrocampista', english: 'Midfielder', example: 'El centrocampista pasó el balón' },
+                        { spanish: 'El delantero', english: 'Forward/Striker', example: 'El delantero marcó un gol' },
+                        { spanish: 'El extremo', english: 'Winger', example: 'El extremo hizo un centro perfecto' },
+                        { spanish: 'El mediocentro', english: 'Central midfielder', example: 'El mediocentro recuperó el balón' },
+                        { spanish: 'El capitán', english: 'Captain', example: 'El capitán motivó al equipo' }
+                    ]
+                },
+                actions: {
+                    name: 'Actions & Verbs',
+                    icon: '⚡',
+                    cards: [
+                        { spanish: 'Pasar', english: 'To pass', example: '¡Pasa el balón!' },
+                        { spanish: 'Tirar/Chutar', english: 'To shoot', example: '¡Tira a la portería!' },
+                        { spanish: 'Correr', english: 'To run', example: '¡Corre más rápido!' },
+                        { spanish: 'Marcar', english: 'To mark/score', example: 'Necesito marcar a ese jugador' },
+                        { spanish: 'Defender', english: 'To defend', example: '¡Defiende la portería!' },
+                        { spanish: 'Driblar/Regatear', english: 'To dribble', example: 'Regatea al defensa' },
+                        { spanish: 'Centrar', english: 'To cross', example: 'Centra el balón al área' },
+                        { spanish: 'Rematar', english: 'To finish/strike', example: 'Remata con fuerza' },
+                        { spanish: 'Interceptar', english: 'To intercept', example: 'Intercepta el pase' },
+                        { spanish: 'Despejar', english: 'To clear', example: 'Despeja el balón' }
+                    ]
+                },
+                training: {
+                    name: 'Training Terms',
+                    icon: '🏃',
+                    cards: [
+                        { spanish: 'El entrenamiento', english: 'Training', example: 'El entrenamiento empieza a las 9' },
+                        { spanish: 'El ejercicio', english: 'Drill/Exercise', example: 'Vamos a hacer un ejercicio' },
+                        { spanish: 'El calentamiento', english: 'Warm-up', example: 'Empezamos con el calentamiento' },
+                        { spanish: 'El estiramiento', english: 'Stretching', example: 'Los estiramientos son importantes' },
+                        { spanish: 'La táctica', english: 'Tactics', example: 'Vamos a practicar la táctica' },
+                        { spanish: 'La estrategia', english: 'Strategy', example: 'Nuestra estrategia es presionar alto' },
+                        { spanish: 'El partido de práctica', english: 'Practice match', example: 'Jugamos un partido de práctica' },
+                        { spanish: 'La formación', english: 'Formation', example: 'Jugamos en formación 4-3-3' }
+                    ]
+                },
+                field: {
+                    name: 'Field & Equipment',
+                    icon: '🏟️',
+                    cards: [
+                        { spanish: 'El campo', english: 'Field/Pitch', example: 'El campo está mojado' },
+                        { spanish: 'La portería', english: 'Goal', example: 'La portería mide 7 metros' },
+                        { spanish: 'El balón', english: 'Ball', example: '¿Dónde está el balón?' },
+                        { spanish: 'El área', english: 'Penalty area', example: 'No toques el balón en el área' },
+                        { spanish: 'La línea', english: 'Line', example: 'El balón cruzó la línea' },
+                        { spanish: 'El banquillo', english: 'Bench', example: 'Los suplentes están en el banquillo' },
+                        { spanish: 'La red', english: 'Net', example: 'El balón entró en la red' },
+                        { spanish: 'El poste', english: 'Goal post', example: 'El balón pegó en el poste' },
+                        { spanish: 'La banda', english: 'Sideline/Wing', example: 'Corre por la banda' }
+                    ]
+                },
+                commands: {
+                    name: 'Coach Commands',
+                    icon: '📢',
+                    cards: [
+                        { spanish: '¡Vamos!', english: "Let's go!", example: '¡Vamos equipo!' },
+                        { spanish: '¡Más rápido!', english: 'Faster!', example: '¡Corre más rápido!' },
+                        { spanish: '¡Bien hecho!', english: 'Well done!', example: '¡Bien hecho, buen pase!' },
+                        { spanish: '¡Otra vez!', english: 'Again!', example: '¡Otra vez, repite el ejercicio!' },
+                        { spanish: '¡Concéntrate!', english: 'Focus!/Concentrate!', example: '¡Concéntrate en el balón!' },
+                        { spanish: '¡Presiona!', english: 'Press!', example: '¡Presiona al jugador!' },
+                        { spanish: '¡Retrocede!', english: 'Fall back!', example: '¡Retrocede a defender!' },
+                        { spanish: '¡Sube!', english: 'Push up!', example: '¡Sube al ataque!' },
+                        { spanish: '¡Juntos!', english: 'Together!', example: '¡Presionamos juntos!' },
+                        { spanish: '¡Marca!', english: 'Mark!', example: '¡Marca a ese jugador!' }
+                    ]
+                },
+                phrases: {
+                    name: 'Common Phrases',
+                    icon: '💬',
+                    cards: [
+                        { spanish: '¿Estás bien?', english: 'Are you okay?', example: 'Después de la caída: ¿Estás bien?' },
+                        { spanish: 'Estoy cansado', english: "I'm tired", example: 'Necesito agua, estoy cansado' },
+                        { spanish: 'No entiendo', english: "I don't understand", example: 'Perdón, no entiendo' },
+                        { spanish: 'Una vez más, por favor', english: 'One more time, please', example: 'Repítelo una vez más, por favor' },
+                        { spanish: '¿Puedo tomar agua?', english: 'Can I get water?', example: 'Tengo sed, ¿puedo tomar agua?' },
+                        { spanish: 'Me duele...', english: 'It hurts... / I hurt my...', example: 'Me duele la rodilla' },
+                        { spanish: 'Buen trabajo', english: 'Good job', example: '¡Buen trabajo en el entrenamiento!' },
+                        { spanish: 'Lo siento', english: "I'm sorry", example: 'Lo siento por el error' },
+                        { spanish: 'Gracias por tu ayuda', english: 'Thanks for your help', example: 'Gracias por tu ayuda con el ejercicio' }
+                    ]
+                }
+            };
 
-  const getFilteredCards = () => {
-    const categoryCards = flashcardData[currentCategory].cards;
-    const cardsWithId = categoryCards.map((card, idx) => ({ 
-      ...card, 
-      id: `${currentCategory}-${idx}` 
-    }));
+            const getFilteredCards = () => {
+                const categoryCards = flashcardData[currentCategory].cards;
+                const cardsWithId = categoryCards.map((card, idx) => ({
+                    ...card,
+                    id: `${currentCategory}-${idx}`
+                }));
 
-    if (studyMode === 'difficult') {
-      return cardsWithId.filter(card => difficultCards.has(card.id));
-    } else if (studyMode === 'unmastered') {
-      return cardsWithId.filter(card => !masteredCards.has(card.id));
-    }
-    return cardsWithId;
-  };
+                if (studyMode === 'difficult') {
+                    return cardsWithId.filter(card => difficultCards.has(card.id));
+                } else if (studyMode === 'unmastered') {
+                    return cardsWithId.filter(card => !masteredCards.has(card.id));
+                }
+                return cardsWithId;
+            };
 
-  const filteredCards = getFilteredCards();
-  const currentCard = filteredCards[currentCardIndex];
-  const cardId = currentCard?.id;
+            const filteredCards = getFilteredCards();
+            const currentCard = filteredCards[currentCardIndex];
+            const cardId = currentCard?.id;
 
-  const nextCard = () => {
-    setIsFlipped(false);
-    setCurrentCardIndex((prev) => (prev + 1) % filteredCards.length);
-  };
+            const nextCard = () => {
+                setIsFlipped(false);
+                setCurrentCardIndex((prev) => (prev + 1) % filteredCards.length);
+            };
 
-  const previousCard = () => {
-    setIsFlipped(false);
-    setCurrentCardIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length);
-  };
+            const previousCard = () => {
+                setIsFlipped(false);
+                setCurrentCardIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length);
+            };
 
-  const markAsMastered = () => {
-    if (!cardId) return;
-    setMasteredCards(prev => new Set([...prev, cardId]));
-    setSessionStats(prev => ({
-      ...prev,
-      cardsStudied: prev.cardsStudied + 1,
-      cardsMarkedEasy: prev.cardsMarkedEasy + 1
-    }));
-    nextCard();
-  };
+            const markAsMastered = () => {
+                if (!cardId) return;
+                setMasteredCards(prev => new Set([...prev, cardId]));
+                setSessionStats(prev => ({
+                    ...prev,
+                    cardsStudied: prev.cardsStudied + 1,
+                    cardsMarkedEasy: prev.cardsMarkedEasy + 1
+                }));
+                nextCard();
+            };
 
-  const markAsDifficult = () => {
-    if (!cardId) return;
-    setDifficultCards(prev => new Set([...prev, cardId]));
-    setSessionStats(prev => ({
-      ...prev,
-      cardsStudied: prev.cardsStudied + 1,
-      cardsMarkedDifficult: prev.cardsMarkedDifficult + 1
-    }));
-    nextCard();
-  };
+            const markAsDifficult = () => {
+                if (!cardId) return;
+                setDifficultCards(prev => new Set([...prev, cardId]));
+                setSessionStats(prev => ({
+                    ...prev,
+                    cardsStudied: prev.cardsStudied + 1,
+                    cardsMarkedDifficult: prev.cardsMarkedDifficult + 1
+                }));
+                nextCard();
+            };
 
-  const shuffleCards = () => {
-    setCurrentCardIndex(Math.floor(Math.random() * filteredCards.length));
-    setIsFlipped(false);
-  };
+            const shuffleCards = () => {
+                setCurrentCardIndex(Math.floor(Math.random() * filteredCards.length));
+                setIsFlipped(false);
+            };
 
-  const changeCategory = (category) => {
-    setCurrentCategory(category);
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setSidebarOpen(false); // Close sidebar on mobile
-  };
+            const changeCategory = (category) => {
+                setCurrentCategory(category);
+                setCurrentCardIndex(0);
+                setIsFlipped(false);
+                setSidebarOpen(false);
+            };
 
-  const resetProgress = () => {
-    setMasteredCards(new Set());
-    setDifficultCards(new Set());
-    setSessionStats({
-      cardsStudied: 0,
-      cardsMarkedEasy: 0,
-      cardsMarkedDifficult: 0,
-      categoriesCompleted: new Set()
-    });
-  };
+            const resetProgress = () => {
+                setMasteredCards(new Set());
+                setDifficultCards(new Set());
+                setSessionStats({
+                    cardsStudied: 0,
+                    cardsMarkedEasy: 0,
+                    cardsMarkedDifficult: 0
+                });
+            };
 
-  const getCategoryProgress = (category) => {
-    const categoryCards = flashcardData[category].cards.map((_, idx) => 
-      `${category}-${idx}`
-    );
-    const masteredInCategory = categoryCards.filter(id => masteredCards.has(id)).length;
-    return Math.round((masteredInCategory / categoryCards.length) * 100);
-  };
+            const getCategoryProgress = (category) => {
+                const categoryCards = flashcardData[category].cards.map((_, idx) =>
+                    `${category}-${idx}`
+                );
+                const masteredInCategory = categoryCards.filter(id => masteredCards.has(id)).length;
+                return Math.round((masteredInCategory / categoryCards.length) * 100);
+            };
 
-  if (!currentCard) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-50 to-blue-50">
-        <div className="text-center p-8">
-          <Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {studyMode === 'difficult' ? 'No Difficult Cards!' : 'All Cards Mastered!'}
-          </h2>
-          <p className="text-gray-600 mb-4">
-            {studyMode === 'difficult' 
-              ? 'Great! You have no cards marked as difficult.'
-              : "You've mastered all cards in this category!"}
-          </p>
-          <button
-            onClick={() => setStudyMode('all')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Study All Cards
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-screen bg-gradient-to-br from-green-50 to-blue-50 overflow-hidden">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
-      >
-        <Menu className="h-6 w-6 text-gray-700" />
-      </button>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={`${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 fixed md:relative w-80 bg-white border-r border-gray-200 flex flex-col overflow-y-auto transition-transform duration-300 z-40 h-full`}>
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-2 mb-2">
-            <span className="text-3xl">⚽</span>
-            <h1 className="text-xl font-bold text-gray-800">Soccer Spanish</h1>
-          </div>
-          <p className="text-sm text-gray-600">Flashcard Trainer</p>
-        </div>
-
-        {/* Study Mode */}
-        <div className="p-4 border-b border-gray-200">
-          <label className="text-sm font-medium text-gray-700 mb-2 block">Study Mode</label>
-          <select
-            value={studyMode}
-            onChange={(e) => setStudyMode(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Cards</option>
-            <option value="unmastered">Unmastered Only</option>
-            <option value="difficult">Difficult Cards ({difficultCards.size})</option>
-          </select>
-        </div>
-
-        {/* Categories */}
-        <div className="flex-1 p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Categories</h3>
-          <div className="space-y-2">
-            {Object.entries(flashcardData).map(([key, category]) => {
-              const progress = getCategoryProgress(key);
-              return (
-                <button
-                  key={key}
-                  onClick={() => changeCategory(key)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
-                    currentCategory === key
-                      ? 'bg-blue-100 border-2 border-blue-500'
-                      : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl">{category.icon}</span>
-                      <span className="font-medium text-gray-800">{category.name}</span>
+            if (!currentCard) {
+                return (
+                    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-50 to-blue-50">
+                        <div className="text-center p-8">
+                            <Trophy className="mx-auto mb-4 text-yellow-500" />
+                            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                                {studyMode === 'difficult' ? 'No Difficult Cards!' : 'All Cards Mastered!'}
+                            </h2>
+                            <p className="text-gray-600 mb-4">
+                                {studyMode === 'difficult'
+                                    ? 'Great! You have no cards marked as difficult.'
+                                    : "You've mastered all cards in this category!"}
+                            </p>
+                            <button
+                                onClick={() => setStudyMode('all')}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                Study All Cards
+                            </button>
+                        </div>
                     </div>
-                    <span className="text-xs text-gray-600">{category.cards.length}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                      />
+                );
+            }
+
+            return (
+                <div className="flex h-screen bg-gradient-to-br from-green-50 to-blue-50 overflow-hidden">
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+                    >
+                        <Menu />
+                    </button>
+
+                    {sidebarOpen && (
+                        <div
+                            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+                            onClick={() => setSidebarOpen(false)}
+                        />
+                    )}
+
+                    <div className={`${
+                        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    } md:translate-x-0 fixed md:relative w-80 bg-white border-r border-gray-200 flex flex-col overflow-y-auto transition-transform duration-300 z-40 h-full`}>
+                        <div className="p-6 border-b border-gray-200">
+                            <div className="flex items-center space-x-2 mb-2">
+                                <span className="text-3xl">⚽</span>
+                                <h1 className="text-xl font-bold text-gray-800">Soccer Spanish</h1>
+                            </div>
+                            <p className="text-sm text-gray-600">Flashcard Trainer</p>
+                        </div>
+
+                        <div className="p-4 border-b border-gray-200">
+                            <label className="text-sm font-medium text-gray-700 mb-2 block">Study Mode</label>
+                            <select
+                                value={studyMode}
+                                onChange={(e) => setStudyMode(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="all">All Cards</option>
+                                <option value="unmastered">Unmastered Only</option>
+                                <option value="difficult">Difficult Cards ({difficultCards.size})</option>
+                            </select>
+                        </div>
+
+                        <div className="flex-1 p-4">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-3">Categories</h3>
+                            <div className="space-y-2">
+                                {Object.entries(flashcardData).map(([key, category]) => {
+                                    const progress = getCategoryProgress(key);
+                                    return (
+                                        <button
+                                            key={key}
+                                            onClick={() => changeCategory(key)}
+                                            className={`w-full text-left p-3 rounded-lg transition-colors ${
+                                                currentCategory === key
+                                                    ? 'bg-blue-100 border-2 border-blue-500'
+                                                    : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="text-xl">{category.icon}</span>
+                                                    <span className="font-medium text-gray-800">{category.name}</span>
+                                                </div>
+                                                <span className="text-xs text-gray-600">{category.cards.length}</span>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                                    <div
+                                                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                                        style={{ width: `${progress}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-xs text-gray-600">{progress}%</span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="p-4 border-t border-gray-200 bg-gray-50">
+                            <button
+                                onClick={() => setShowStats(!showStats)}
+                                className="w-full flex items-center justify-between text-sm font-medium text-gray-700 mb-3"
+                            >
+                                <span className="flex items-center">
+                                    <TrendingUp className="mr-2" />
+                                    Session Stats
+                                </span>
+                                <span>{showStats ? '▼' : '▶'}</span>
+                            </button>
+
+                            {showStats && (
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Cards Studied:</span>
+                                        <span className="font-medium">{sessionStats.cardsStudied}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Mastered:</span>
+                                        <span className="font-medium text-green-600">{masteredCards.size}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Difficult:</span>
+                                        <span className="font-medium text-orange-600">{difficultCards.size}</span>
+                                    </div>
+                                    <button
+                                        onClick={resetProgress}
+                                        className="w-full mt-3 px-3 py-2 text-xs bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center justify-center"
+                                    >
+                                        <RotateCcw />
+                                        <span className="ml-1">Reset Progress</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <span className="text-xs text-gray-600">{progress}%</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Stats */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <button
-            onClick={() => setShowStats(!showStats)}
-            className="w-full flex items-center justify-between text-sm font-medium text-gray-700 mb-3"
-          >
-            <span className="flex items-center">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Session Stats
-            </span>
-            <span>{showStats ? '▼' : '▶'}</span>
-          </button>
-          
-          {showStats && (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Cards Studied:</span>
-                <span className="font-medium">{sessionStats.cardsStudied}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Mastered:</span>
-                <span className="font-medium text-green-600">{masteredCards.size}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Difficult:</span>
-                <span className="font-medium text-orange-600">{difficultCards.size}</span>
-              </div>
-              <button
-                onClick={resetProgress}
-                className="w-full mt-3 px-3 py-2 text-xs bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center justify-center"
-              >
-                <RotateCcw className="h-3 w-3 mr-1" />
-                Reset Progress
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+                    <div className="flex-1 flex flex-col">
+                        <div className="bg-white border-b border-gray-200 p-4">
+                            <div className="flex items-center justify-between max-w-4xl mx-auto">
+                                <div className="flex items-center space-x-2 md:space-x-4 ml-12 md:ml-0">
+                                    <span className="text-xl md:text-2xl">{flashcardData[currentCategory].icon}</span>
+                                    <div>
+                                        <h2 className="font-semibold text-gray-800 text-sm md:text-base">{flashcardData[currentCategory].name}</h2>
+                                        <p className="text-xs md:text-sm text-gray-600">
+                                            Card {currentCardIndex + 1} of {filteredCards.length}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={shuffleCards}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                    title="Shuffle"
+                                >
+                                    <Shuffle />
+                                </button>
+                            </div>
+                        </div>
 
-      {/* Main Flashcard Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between max-w-4xl mx-auto">
-            <div className="flex items-center space-x-2 md:space-x-4 ml-12 md:ml-0">
-              <span className="text-xl md:text-2xl">{flashcardData[currentCategory].icon}</span>
-              <div>
-                <h2 className="font-semibold text-gray-800 text-sm md:text-base">{flashcardData[currentCategory].name}</h2>
-                <p className="text-xs md:text-sm text-gray-600">
-                  Card {currentCardIndex + 1} of {filteredCards.length}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={shuffleCards}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Shuffle"
-            >
-              <Shuffle className="h-4 w-4 md:h-5 md:w-5" />
-            </button>
-          </div>
-        </div>
+                        <div className="flex-1 flex items-center justify-center p-4 md:p-8">
+                            <div className="w-full max-w-2xl">
+                                <div
+                                    onClick={() => setIsFlipped(!isFlipped)}
+                                    className="relative h-64 md:h-96 cursor-pointer perspective"
+                                    style={{ perspective: '1000px' }}
+                                >
+                                    <div
+                                        className="absolute w-full h-full transition-transform duration-500"
+                                        style={{
+                                            transformStyle: 'preserve-3d',
+                                            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                                        }}
+                                    >
+                                        <div
+                                            className="absolute w-full h-full bg-white rounded-xl md:rounded-2xl shadow-2xl p-4 md:p-8 flex flex-col items-center justify-center border-4 border-blue-500"
+                                            style={{ backfaceVisibility: 'hidden' }}
+                                        >
+                                            <div className="text-center">
+                                                <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-4">
+                                                    {currentCard.spanish}
+                                                </p>
+                                                <p className="text-gray-500 text-sm md:text-lg">Tap to reveal</p>
+                                            </div>
+                                            <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4">
+                                                {masteredCards.has(cardId) && (
+                                                    <CheckCircle className="text-green-500" />
+                                                )}
+                                                {difficultCards.has(cardId) && (
+                                                    <Star className="text-orange-500" />
+                                                )}
+                                            </div>
+                                        </div>
 
-        {/* Flashcard */}
-        <div className="flex-1 flex items-center justify-center p-4 md:p-8">
-          <div className="w-full max-w-2xl">
-            {/* Card */}
-            <div
-              onClick={() => setIsFlipped(!isFlipped)}
-              className="relative h-64 md:h-96 cursor-pointer perspective"
-              style={{ perspective: '1000px' }}
-            >
-              <div
-                className={`absolute w-full h-full transition-transform duration-500 transform-style-3d ${
-                  isFlipped ? 'rotate-y-180' : ''
-                }`}
-                style={{
-                  transformStyle: 'preserve-3d',
-                  transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
-                }}
-              >
-                {/* Front */}
-                <div
-                  className="absolute w-full h-full bg-white rounded-xl md:rounded-2xl shadow-2xl p-4 md:p-8 flex flex-col items-center justify-center border-4 border-blue-500"
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <div className="text-center">
-                    <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-4">
-                      {currentCard.spanish}
-                    </p>
-                    <p className="text-gray-500 text-sm md:text-lg">Tap to reveal</p>
-                  </div>
-                  <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4">
-                    {masteredCards.has(cardId) && (
-                      <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-500" />
-                    )}
-                    {difficultCards.has(cardId) && (
-                      <Star className="h-6 w-6 md:h-8 md:w-8 text-orange-500" />
-                    )}
-                  </div>
+                                        <div
+                                            className="absolute w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl md:rounded-2xl shadow-2xl p-4 md:p-8 flex flex-col items-center justify-center text-white border-4 border-blue-700"
+                                            style={{
+                                                backfaceVisibility: 'hidden',
+                                                transform: 'rotateY(180deg)'
+                                            }}
+                                        >
+                                            <div className="text-center">
+                                                <p className="text-2xl md:text-4xl font-bold mb-2 md:mb-4">{currentCard.english}</p>
+                                                <div className="w-16 md:w-24 h-1 bg-white/30 mx-auto mb-3 md:mb-6"></div>
+                                                <p className="text-lg md:text-xl italic opacity-90">{currentCard.spanish}</p>
+                                                <p className="text-sm md:text-lg mt-3 md:mt-6 opacity-80">"{currentCard.example}"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 md:mt-8 flex flex-col md:flex-row items-center justify-center space-y-3 md:space-y-0 md:space-x-4">
+                                    <div className="flex items-center space-x-4">
+                                        <button
+                                            onClick={previousCard}
+                                            className="p-3 md:p-4 bg-white rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all"
+                                        >
+                                            <ArrowLeft />
+                                        </button>
+
+                                        <button
+                                            onClick={nextCard}
+                                            className="p-3 md:p-4 bg-white rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all"
+                                        >
+                                            <ArrowRight />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center space-x-3">
+                                        <button
+                                            onClick={markAsDifficult}
+                                            className="px-4 md:px-6 py-2 md:py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 shadow-lg hover:shadow-xl transition-all flex items-center space-x-2 text-sm md:text-base"
+                                        >
+                                            <Star className="text-white" />
+                                            <span>Difficult</span>
+                                        </button>
+
+                                        <button
+                                            onClick={markAsMastered}
+                                            className="px-4 md:px-6 py-2 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 shadow-lg hover:shadow-xl transition-all flex items-center space-x-2 text-sm md:text-base"
+                                        >
+                                            <CheckCircle className="text-white" />
+                                            <span>Mastered</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            );
+        };
 
-                {/* Back */}
-                <div
-                  className="absolute w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl md:rounded-2xl shadow-2xl p-4 md:p-8 flex flex-col items-center justify-center text-white border-4 border-blue-700"
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    transform: 'rotateY(180deg)'
-                  }}
-                >
-                  <div className="text-center">
-                    <p className="text-2xl md:text-4xl font-bold mb-2 md:mb-4">{currentCard.english}</p>
-                    <div className="w-16 md:w-24 h-1 bg-white/30 mx-auto mb-3 md:mb-6"></div>
-                    <p className="text-lg md:text-xl italic opacity-90">{currentCard.spanish}</p>
-                    <p className="text-sm md:text-lg mt-3 md:mt-6 opacity-80">"{currentCard.example}"</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="mt-4 md:mt-8 flex flex-col md:flex-row items-center justify-center space-y-3 md:space-y-0 md:space-x-4">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={previousCard}
-                  className="p-3 md:p-4 bg-white rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all"
-                >
-                  <ArrowLeft className="h-5 w-5 md:h-6 md:w-6 text-gray-700" />
-                </button>
-
-                <button
-                  onClick={nextCard}
-                  className="p-3 md:p-4 bg-white rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all"
-                >
-                  <ArrowRight className="h-5 w-5 md:h-6 md:w-6 text-gray-700" />
-                </button>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={markAsDifficult}
-                  className="px-4 md:px-6 py-2 md:py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 shadow-lg hover:shadow-xl transition-all flex items-center space-x-2 text-sm md:text-base"
-                >
-                  <Star className="h-4 w-4 md:h-5 md:w-5" />
-                  <span>Difficult</span>
-                </button>
-
-                <button
-                  onClick={markAsMastered}
-                  className="px-4 md:px-6 py-2 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 shadow-lg hover:shadow-xl transition-all flex items-center space-x-2 text-sm md:text-base"
-                >
-                  <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
-                  <span>Mastered</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default SoccerSpanishFlashcards;
+        ReactDOM.render(<SoccerSpanishFlashcards />, document.getElementById('root'));
+    </script>
+</body>
+</html>
