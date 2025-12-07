@@ -1,0 +1,460 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">import React, { useState, useEffect } from 'react';</p>
+<p class="p1">import { ArrowRight, ArrowLeft, RotateCcw, Star, CheckCircle, X, Trophy, Target, TrendingUp, Shuffle } from 'lucide-react';</p>
+<p class="p2"><br></p>
+<p class="p1">const SoccerSpanishFlashcards = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [currentCategory, setCurrentCategory] = useState('positions');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [currentCardIndex, setCurrentCardIndex] = useState(0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [isFlipped, setIsFlipped] = useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [masteredCards, setMasteredCards] = useState(new Set());</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [difficultCards, setDifficultCards] = useState(new Set());</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [studyMode, setStudyMode] = useState('all'); // all, difficult, unmastered</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [showStats, setShowStats] = useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [sessionStats, setSessionStats] = useState({</p>
+<p class="p1"><span class="Apple-converted-space">    </span>cardsStudied: 0,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>cardsMarkedEasy: 0,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>cardsMarkedDifficult: 0,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>categoriesCompleted: new Set()</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const flashcardData = {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>positions: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>name: 'Positions',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>icon: '👥',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cards: [</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El portero', english: 'Goalkeeper', example: 'El portero atrapó el balón' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El defensa', english: 'Defender', example: 'El defensa marcó al delantero' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El lateral', english: 'Fullback', example: 'El lateral derecho corrió por la banda' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El centrocampista', english: 'Midfielder', example: 'El centrocampista pasó el balón' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El delantero', english: 'Forward/Striker', example: 'El delantero marcó un gol' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El extremo', english: 'Winger', example: 'El extremo hizo un centro perfecto' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El mediocentro', english: 'Central midfielder', example: 'El mediocentro recuperó el balón' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El capitán', english: 'Captain', example: 'El capitán motivó al equipo' }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>actions: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>name: 'Actions &amp; Verbs',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>icon: '⚡',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cards: [</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Pasar', english: 'To pass', example: '¡Pasa el balón!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Tirar/Chutar', english: 'To shoot', example: '¡Tira a la portería!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Correr', english: 'To run', example: '¡Corre más rápido!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Marcar', english: 'To mark/score', example: 'Necesito marcar a ese jugador' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Defender', english: 'To defend', example: '¡Defiende la portería!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Driblar/Regatear', english: 'To dribble', example: 'Regatea al defensa' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Centrar', english: 'To cross', example: 'Centra el balón al área' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Rematar', english: 'To finish/strike', example: 'Remata con fuerza' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Interceptar', english: 'To intercept', example: 'Intercepta el pase' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Despejar', english: 'To clear', example: 'Despeja el balón' }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>training: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>name: 'Training Terms',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>icon: '🏃',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cards: [</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El entrenamiento', english: 'Training', example: 'El entrenamiento empieza a las 9' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El ejercicio', english: 'Drill/Exercise', example: 'Vamos a hacer un ejercicio' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El calentamiento', english: 'Warm-up', example: 'Empezamos con el calentamiento' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El estiramiento', english: 'Stretching', example: 'Los estiramientos son importantes' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'La táctica', english: 'Tactics', example: 'Vamos a practicar la táctica' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'La estrategia', english: 'Strategy', example: 'Nuestra estrategia es presionar alto' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El partido de práctica', english: 'Practice match', example: 'Jugamos un partido de práctica' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'La formación', english: 'Formation', example: 'Jugamos en formación 4-3-3' }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>field: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>name: 'Field &amp; Equipment',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>icon: '🏟️',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cards: [</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El campo', english: 'Field/Pitch', example: 'El campo está mojado' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'La portería', english: 'Goal', example: 'La portería mide 7 metros' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El balón', english: 'Ball', example: '¿Dónde está el balón?' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El área', english: 'Penalty area', example: 'No toques el balón en el área' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'La línea', english: 'Line', example: 'El balón cruzó la línea' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El banquillo', english: 'Bench', example: 'Los suplentes están en el banquillo' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'La red', english: 'Net', example: 'El balón entró en la red' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'El poste', english: 'Goal post', example: 'El balón pegó en el poste' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'La banda', english: 'Sideline/Wing', example: 'Corre por la banda' }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>commands: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>name: 'Coach Commands',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>icon: '📢',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cards: [</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Vamos!', english: "Let's go!", example: '¡Vamos equipo!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Más rápido!', english: 'Faster!', example: '¡Corre más rápido!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Bien hecho!', english: 'Well done!', example: '¡Bien hecho, buen pase!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Otra vez!', english: 'Again!', example: '¡Otra vez, repite el ejercicio!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Concéntrate!', english: 'Focus!/Concentrate!', example: '¡Concéntrate en el balón!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Presiona!', english: 'Press!', example: '¡Presiona al jugador!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Retrocede!', english: 'Fall back!', example: '¡Retrocede a defender!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Sube!', english: 'Push up!', example: '¡Sube al ataque!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Juntos!', english: 'Together!', example: '¡Presionamos juntos!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¡Marca!', english: 'Mark!', example: '¡Marca a ese jugador!' }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>phrases: {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>name: 'Common Phrases',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>icon: '💬',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cards: [</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¿Estás bien?', english: 'Are you okay?', example: 'Después de la caída: ¿Estás bien?' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Estoy cansado', english: "I'm tired", example: 'Necesito agua, estoy cansado' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'No entiendo', english: "I don't understand", example: 'Perdón, no entiendo' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Una vez más, por favor', english: 'One more time, please', example: 'Repítelo una vez más, por favor' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: '¿Puedo tomar agua?', english: 'Can I get water?', example: 'Tengo sed, ¿puedo tomar agua?' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Me duele...', english: 'It hurts... / I hurt my...', example: 'Me duele la rodilla' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Buen trabajo', english: 'Good job', example: '¡Buen trabajo en el entrenamiento!' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Lo siento', english: "I'm sorry", example: 'Lo siento por el error' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{ spanish: 'Gracias por tu ayuda', english: 'Thanks for your help', example: 'Gracias por tu ayuda con el ejercicio' }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const allCards = Object.values(flashcardData).flatMap(cat =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>cat.cards.map(card =&gt; ({ ...card, category: cat.name }))</p>
+<p class="p1"><span class="Apple-converted-space">  </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getFilteredCards = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const categoryCards = flashcardData[currentCategory].cards;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const cardsWithId = categoryCards.map((card, idx) =&gt; ({<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>...card,<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>id: `${currentCategory}-${idx}`<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>}));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (studyMode === 'difficult') {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return cardsWithId.filter(card =&gt; difficultCards.has(card.id));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else if (studyMode === 'unmastered') {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return cardsWithId.filter(card =&gt; !masteredCards.has(card.id));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return cardsWithId;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const filteredCards = getFilteredCards();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const currentCard = filteredCards[currentCardIndex];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const cardId = currentCard?.id;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const nextCard = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setIsFlipped(false);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setCurrentCardIndex((prev) =&gt; (prev + 1) % filteredCards.length);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const previousCard = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setIsFlipped(false);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setCurrentCardIndex((prev) =&gt; (prev - 1 + filteredCards.length) % filteredCards.length);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const markAsMastered = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!cardId) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setMasteredCards(prev =&gt; new Set([...prev, cardId]));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSessionStats(prev =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>...prev,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cardsStudied: prev.cardsStudied + 1,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cardsMarkedEasy: prev.cardsMarkedEasy + 1</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>nextCard();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const markAsDifficult = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!cardId) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setDifficultCards(prev =&gt; new Set([...prev, cardId]));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSessionStats(prev =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>...prev,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cardsStudied: prev.cardsStudied + 1,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cardsMarkedDifficult: prev.cardsMarkedDifficult + 1</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>nextCard();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const shuffleCards = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setCurrentCardIndex(Math.floor(Math.random() * filteredCards.length));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setIsFlipped(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const changeCategory = (category) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setCurrentCategory(category);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setCurrentCardIndex(0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setIsFlipped(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const resetProgress = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setMasteredCards(new Set());</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setDifficultCards(new Set());</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setSessionStats({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cardsStudied: 0,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cardsMarkedEasy: 0,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cardsMarkedDifficult: 0,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>categoriesCompleted: new Set()</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getCategoryProgress = (category) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const categoryCards = flashcardData[category].cards.map((_, idx) =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>`${category}-${idx}`</p>
+<p class="p1"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const masteredInCategory = categoryCards.filter(id =&gt; masteredCards.has(id)).length;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return Math.round((masteredInCategory / categoryCards.length) * 100);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!currentCard) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-50 to-blue-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="text-center p-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h2 className="text-2xl font-bold text-gray-800 mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{studyMode === 'difficult' ? 'No Difficult Cards!' : 'All Cards Mastered!'}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p className="text-gray-600 mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{studyMode === 'difficult'<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>? 'Great! You have no cards marked as difficult.'</p>
+<p class="p1"><span class="Apple-converted-space">              </span>: "You've mastered all cards in this category!"}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onClick={() =&gt; setStudyMode('all')}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Study All Cards</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div className="flex h-screen bg-gradient-to-br from-green-50 to-blue-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{/* Sidebar */}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="w-80 bg-white border-r border-gray-200 flex flex-col overflow-y-auto"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="p-6 border-b border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex items-center space-x-2 mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span className="text-3xl"&gt;⚽&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h1 className="text-xl font-bold text-gray-800"&gt;Soccer Spanish&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p className="text-sm text-gray-600"&gt;Flashcard Trainer&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Study Mode */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="p-4 border-b border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;label className="text-sm font-medium text-gray-700 mb-2 block"&gt;Study Mode&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;select</p>
+<p class="p1"><span class="Apple-converted-space">            </span>value={studyMode}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onChange={(e) =&gt; setStudyMode(e.target.value)}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="all"&gt;All Cards&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="unmastered"&gt;Unmastered Only&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value="difficult"&gt;Difficult Cards ({difficultCards.size})&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Categories */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="flex-1 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;h3 className="text-sm font-semibold text-gray-700 mb-3"&gt;Categories&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="space-y-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{Object.entries(flashcardData).map(([key, category]) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>const progress = getCategoryProgress(key);</p>
+<p class="p1"><span class="Apple-converted-space">              </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>key={key}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>onClick={() =&gt; changeCategory(key)}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>className={`w-full text-left p-3 rounded-lg transition-colors ${</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentCategory === key</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>? 'bg-blue-100 border-2 border-blue-500'</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>: 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>}`}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="flex items-center justify-between mb-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="flex items-center space-x-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;span className="text-xl"&gt;{category.icon}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;span className="font-medium text-gray-800"&gt;{category.name}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;span className="text-xs text-gray-600"&gt;{category.cards.length}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="flex items-center space-x-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="flex-1 bg-gray-200 rounded-full h-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;div<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>className="bg-green-500 h-2 rounded-full transition-all duration-300"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>style={{ width: `${progress}%` }}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;span className="text-xs text-gray-600"&gt;{progress}%&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>})}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Stats */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="p-4 border-t border-gray-200 bg-gray-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">            </span>onClick={() =&gt; setShowStats(!showStats)}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="w-full flex items-center justify-between text-sm font-medium text-gray-700 mb-3"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;TrendingUp className="h-4 w-4 mr-2" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>Session Stats</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span&gt;{showStats ? '▼' : '▶'}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>{showStats &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="space-y-2 text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex justify-between"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="text-gray-600"&gt;Cards Studied:&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="font-medium"&gt;{sessionStats.cardsStudied}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex justify-between"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="text-gray-600"&gt;Mastered:&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="font-medium text-green-600"&gt;{masteredCards.size}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex justify-between"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="text-gray-600"&gt;Difficult:&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="font-medium text-orange-600"&gt;{difficultCards.size}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={resetProgress}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full mt-3 px-3 py-2 text-xs bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center justify-center"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;RotateCcw className="h-3 w-3 mr-1" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>Reset Progress</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>{/* Main Flashcard Area */}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="flex-1 flex flex-col"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Header */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="bg-white border-b border-gray-200 p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex items-center justify-between max-w-4xl mx-auto"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex items-center space-x-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span className="text-2xl"&gt;{flashcardData[currentCategory].icon}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h2 className="font-semibold text-gray-800"&gt;{flashcardData[currentCategory].name}&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p className="text-sm text-gray-600"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>Card {currentCardIndex + 1} of {filteredCards.length}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onClick={shuffleCards}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>title="Shuffle"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Shuffle className="h-5 w-5" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* Flashcard */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="flex-1 flex items-center justify-center p-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="w-full max-w-2xl"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* Card */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onClick={() =&gt; setIsFlipped(!isFlipped)}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="relative h-96 cursor-pointer perspective"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>style={{ perspective: '1000px' }}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className={`absolute w-full h-full transition-transform duration-500 transform-style-3d ${</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>isFlipped ? 'rotate-y-180' : ''</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}`}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>style={{</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>transformStyle: 'preserve-3d',</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{/* Front */}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>className="absolute w-full h-full bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center border-4 border-blue-500"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>style={{ backfaceVisibility: 'hidden' }}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p className="text-5xl font-bold text-gray-800 mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>{currentCard.spanish}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p className="text-gray-500 text-lg"&gt;Click to reveal&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="absolute bottom-4 right-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>{masteredCards.has(cardId) &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;CheckCircle className="h-8 w-8 text-green-500" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>{difficultCards.has(cardId) &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>&lt;Star className="h-8 w-8 text-orange-500" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>{/* Back */}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>className="absolute w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center text-white border-4 border-blue-700"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>style={{</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>backfaceVisibility: 'hidden',</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>transform: 'rotateY(180deg)'</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>}}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p className="text-4xl font-bold mb-4"&gt;{currentCard.english}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="w-24 h-1 bg-white/30 mx-auto mb-6"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p className="text-xl italic opacity-90"&gt;{currentCard.spanish}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p className="text-lg mt-6 opacity-80"&gt;"{currentCard.example}"&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* Controls */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="mt-8 flex items-center justify-center space-x-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={previousCard}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="p-4 bg-white rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;ArrowLeft className="h-6 w-6 text-gray-700" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={markAsDifficult}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;Star className="h-5 w-5" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span&gt;Difficult&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={markAsMastered}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;CheckCircle className="h-5 w-5" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span&gt;Mastered&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={nextCard}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="p-4 bg-white rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;ArrowRight className="h-6 w-6 text-gray-700" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>);</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">export default SoccerSpanishFlashcards;</p>
+</body>
+</html>
