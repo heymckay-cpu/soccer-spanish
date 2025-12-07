@@ -32,6 +32,7 @@
         const TrendingUp = ({className}) => <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>;
         const Shuffle = ({className}) => <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>;
         const Menu = ({className}) => <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        const Volume2 = ({className}) => <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>;
 
         const SoccerSpanishFlashcards = () => {
             const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -220,6 +221,20 @@
                 );
                 const masteredInCategory = categoryCards.filter(id => masteredCards.has(id)).length;
                 return Math.round((masteredInCategory / categoryCards.length) * 100);
+            };
+
+            const speakText = (text) => {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+                
+                // Create speech utterance
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES'; // Spanish (Spain) for Madrid
+                utterance.rate = 0.9; // Slightly slower for learning
+                utterance.pitch = 1.0;
+                
+                // Speak the text
+                window.speechSynthesis.speak(utterance);
             };
 
             if (!currentCard) {
@@ -428,7 +443,19 @@
                                                 <p className="text-2xl md:text-4xl font-bold mb-2 md:mb-4">{currentCard.english}</p>
                                                 <div className="w-16 md:w-24 h-1 bg-white/30 mx-auto mb-3 md:mb-6"></div>
                                                 <p className="text-lg md:text-xl italic opacity-90">{currentCard.spanish}</p>
-                                                <p className="text-sm md:text-lg mt-3 md:mt-6 opacity-80">"{currentCard.example}"</p>
+                                                <div className="flex items-center justify-center mt-3 md:mt-6 space-x-2">
+                                                    <p className="text-sm md:text-lg opacity-80">"{currentCard.example}"</p>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            speakText(currentCard.example);
+                                                        }}
+                                                        className="p-2 hover:bg-white/20 rounded-full transition-all"
+                                                        title="Listen to pronunciation"
+                                                    >
+                                                        <Volume2 className="text-white" />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
